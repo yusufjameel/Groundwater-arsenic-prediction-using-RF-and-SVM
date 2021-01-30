@@ -11,7 +11,8 @@ output:
 knitr::opts_chunk$set(echo = TRUE, fig.align="center", message=FALSE, warning=FALSE)
 ```
 
-In this code, I am using random forest model to predict groundwater arsenic in the Indus Valley Basin where groundwater arsenic is pervasive and posses a serious health issue.
+In this code, I am using random forest model to predict groundwater arsenic in the Indus Valley Basin 
+where groundwater arsenic is pervasive and posses a serious health issue.
 
 ## Import the libraries
 
@@ -68,7 +69,9 @@ As_Indus$As_cat = as.factor(As_Indus$As_cat)
 
 We will cluster the data as there are several thousands points
 In this chunk we will get the data ready to be plotted
-Since there are 30,000+ measurements over a small region, we will cluster the data and then plot the proportion of wells in each village that have low arsenic concentration (cyan) and high arsenic concentration (red). Each cluster represents all the points in a 10 km radius.
+Since there are 30,000+ measurements over a small region, we will cluster the data and then 
+plot the proportion of wells in each village that have low arsenic concentration (cyan) and 
+high arsenic concentration (red). Each cluster represents all the points in a 10 km radius.
 
 ```{r, message=FALSE, warning=FALSE}
 
@@ -173,7 +176,9 @@ ggplot() + theme_bw() +
               color="dark green")
 ```
 
-We see that most of the wells are uncontaminated and the contaminated wells lie on the eastern and southern part of the state. Ravi River has the largest proportion of the contaminated wells (high proportion of red - greater than 10 ppb of arsenic)  for each cluster. 
+We see that most of the wells are uncontaminated and the contaminated wells lie on the eastern
+and southern part of the state. Ravi River has the largest proportion of the contaminated wells 
+(high proportion of red - greater than 10 ppb of arsenic)  for each cluster. 
 
 In the figure A is Amritsar, F is Faisalabad and M is Multan.
 
@@ -212,7 +217,8 @@ As_Indus= As_Indus[complete.cases(As_Indus), ] ### only keep the complete cases
 
 ## Data rearrangement
 
-since the predictor names are large,  we reassign names to them: all the predictors are assigned the names var1 to var56 in alphabetical order.
+since the predictor names are large,  we reassign names to them: all the 
+predictors are assigned the names var1 to var56 in alphabetical order.
 
 ```{r, message=FALSE, warning=FALSE}
 all_data_select = As_Indus[,c(68, 7:8, 12:67)]
@@ -224,7 +230,10 @@ for (i in 1:56){
 
 ## Import all the raster across the entire punjab basin
 
-We will import the rasters needed to predict the probability of arsenic in the Indus River Basin (we still haven't ran the model, however it is needed as all the data levels for factors are sometimes not included in the training dataset). So we will add all the factor levles present in the rasters to the training dataset.
+We will import the rasters needed to predict the probability of arsenic in the Indus River Basin 
+(we still haven't ran the model, however it is needed as all the data levels for factors are sometimes 
+not included in the training dataset). So we will add all the factor levles present in the rasters to 
+the training dataset.
 
 Read the rasters
 
@@ -293,9 +302,15 @@ iso_test <- all_data_select[-trainIndex,]
 
 ## Run random forest
 
-The number of decision trees was fixed at 500, one-third of sample data was not included in each decision tree [out-of-bag (OOB) samples] by the bagging process. The randomly selected variables ‘mtry’ made available at each node was fixed at 8 (square root of the total number of variables).
+The number of decision trees was fixed at 500, one-third of sample data was not included 
+in each decision tree [out-of-bag (OOB) samples] by the bagging process. The randomly selected
+variables ‘mtry’ made available at each node was fixed at 8 (square root of the total number of variables).
 
-As our data distribution shows a considerable class imbalance with more lower values (i.e., As <10 ppb) than higher values (As >10 ppb), the training dataset was randomly downsampled for each tree generation. We chose 2000 samples of arsenic greater than and lower than 10 ppb respectively at each node. In this way, the information from all measurements was incorporated in the model, while also avoiding the problem of overemphasizing low concentrations. 
+As our data distribution shows a considerable class imbalance with more lower values (i.e., As <10 ppb)
+than higher values (As >10 ppb), the training dataset was randomly downsampled for each tree generation.
+We chose 2000 samples of arsenic greater than and lower than 10 ppb respectively at each node. 
+In this way, the information from all measurements was incorporated in the model, 
+while also avoiding the problem of overemphasizing low concentrations. 
 
 ```{r, message=FALSE, warning=FALSE}
 #mtry = 8 (square root of the total number of variables)
@@ -320,7 +335,8 @@ plot(m1$err.rate[,"0"], col = "blue", ylim = c(0,0.4))
 
 ## Predict for the test dataset
 
-We will use the model output to classify probability of arsenic exceeding 10 ppb (category = 1) for the test dataset and compare with results with the actual arsenic category for each well.
+We will use the model output to classify probability of arsenic exceeding 10 ppb (category = 1)
+for the test dataset and compare with results with the actual arsenic category for each well.
 
 ```{r}
 pred_rf <- predict(m1, iso_test, type = "prob")
@@ -357,7 +373,8 @@ plot(cp)
   
 ```
 
-The model performs pretty good. The accuracy is 85% with high sensitivity, however the specificity of the model is a bit low.
+The model performs pretty good. The accuracy is 85% with high sensitivity,
+however the specificity of the model is a bit low.
 
 ## Predict Arsenic for entire Punjab based on random forest model
 
@@ -405,7 +422,7 @@ Step 1: Get the rivers in the basin, major cities and the state boundaries
  
 ```
 
-Step -2 Clip the model output to Punjab
+Step-2 Clip the model output to Punjab
 
 ```{r, message=FALSE, warning=FALSE, results = 'hide'}
 punjab_crop <- crop(rf_model_raster, ab)
@@ -413,14 +430,16 @@ punjab_crop <- mask(punjab_crop, ab)
 st_crs(river_punjab)==st_crs(punjab_crop)
 ```
 
-Plot the map -Step 3
+Step-3 Plot the map
 
 ```{r, message=FALSE, warning=FALSE, out.width = '80%'}
 tm_shape(punjab_crop) + 
     tm_raster(n=8, palette="-RdBu", midpoint = 0.5) +
      tm_shape(cities_points) + tm_dots(size = 0.25, shape=20) +
-     tm_shape( ab) + tm_polygons(col = "gray99",border.col = "black", lwd = 0.75,alpha = 0.1,legend.show = FALSE)+
-     tm_layout(main.title  = "Random forest prediction for As > 10 ppb", legend.bg.color = "white", legend.bg.alpha=.5,
+     tm_shape( ab) + tm_polygons(col = "gray99",border.col = "black",
+     lwd = 0.75,alpha = 0.1,legend.show = FALSE)+
+     tm_layout(main.title  = "Random forest prediction for As > 10 ppb", 
+     legend.bg.color = "white", legend.bg.alpha=.5,
               legend.frame=F, legend.outside = F, bg.color = "gray80") + 
      tm_shape(indus) + tm_lines(col = "darkgreen",  alpha = 0.7, lwd = 1, lty = "solid") +
      tm_shape(ravi) + tm_lines(col = "darkgreen", alpha = 0.7, lwd = 1, lty = "solid") +
